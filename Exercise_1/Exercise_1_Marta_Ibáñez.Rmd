@@ -1,0 +1,123 @@
+---
+title: "Exploratory analysis of a GEO dataset"
+author: "Marta Ibáñez Lligoña"
+date: "5/21/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# PART 1
+# Introduction
+
+# Summary
+The study is entitled as "Genome wide DNA methylation analysis of isolated endometrial epithelial cells from obese women"
+
+The summary of the study says the following *Genomo wide DNA methylation analysis of isolated endometrial epithelial cells from obese women. The illumima Infinium MethylationEPIC was used to obtain DNA methylatoin profiles across approximately 850K CpGs in isolated cultured cells. Total eight samples (five controls and three obese cases) were included in the file.*
+
+### Experimental Design
+Bisulphite converted DNA from the eight samples were hybridized to the lllumina Infinium MethylationEPIC.
+
+### Citations
+Nagashima M, Miwa N, Hirasawa H, Katagiri Y et al.
+
+# Data description
+There are two files: the target files and the expression matrix.
+
+
+
+
+
+```{r}
+expression <- as.matrix(read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/Ibanez_Marta-OmicsTechniques/Exercise_1/samples_data.txt", row.names=1, comment.char="#"))
+targets <- read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/Ibanez_Marta-OmicsTechniques/Exercise_1/targets.txt", header=TRUE)
+```
+
+
+
+```{r}
+show(targets)
+dim(expression)
+summary(expression)
+```
+
+We can now check the type of files they are:
+```{r}
+class(targets)
+class(expression)
+```
+The data is a matrix and contains 8 different columns, which I assume they are the different samples.
+
+```{r}
+boxplot(expression, las=2)
+```
+
+# PART 2
+```{r}
+require(Biobase)
+```
+
+```{r}
+
+myEset <- ExpressionSet(expression)
+class(myEset)
+show(myEset)
+```
+
+## Information about covariates
+```{r}
+columnDesc <- data.frame(labelDescription = c("Sample Names", "Cells"))
+myAnnotDF <- new("AnnotatedDataFrame", data = targets, varMetadata= columnDesc)
+show(myAnnotDF)
+````
+
+```{r}
+phenoData(myEset) <- myAnnotDF
+rownames(pData(myAnnotDF)) <- pData(myAnnotDF)$SampleName
+myEset <- ExpressionSet(assayData = expression, phenoData = myAnnotDF)
+show(myEset)
+```
+
+## Adding information about features
+```{r}
+myEset <- ExpressionSet(assayData = expression, phenoData = myAnnotDF)
+show(myEset)
+```
+## Using objects of class ExpressionSet
+```{r}
+dim(exprs(myEset))
+class(phenoData(myEset))
+class(pData(phenoData(myEset)))
+head(pData(phenoData(myEset)))
+head(pData(myEset))
+```
+
+Then, I tried subsetting the expression set:
+```{r}
+smallEset <- myEset[1:15, c(1:3,6:8)]
+dim(exprs(smallEset))
+dim(pData(smallEset))
+head(pData(smallEset))
+all(colnames(exprs(smallEset))==rownames(pData(smallEset)))
+```
+
+
+# Working with GEOquery
+
+```{r}
+require(GEOquery)
+gse <- getGEO("GSE122148")
+class(gse)
+names(gse)
+gse[[1]]
+esetFromGEO<-gse[[1]]
+```
+
+
+
+
+
+
+
