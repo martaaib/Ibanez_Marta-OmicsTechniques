@@ -26,10 +26,6 @@ Nagashima M, Miwa N, Hirasawa H, Katagiri Y et al.
 # Data description
 There are two files: the target files and the expression matrix.
 
-
-
-
-
 ```{r}
 expression <- as.matrix(read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/Ibanez_Marta-OmicsTechniques/Exercise_1/samples_data.txt", row.names=1, comment.char="#"))
 targets <- read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/Ibanez_Marta-OmicsTechniques/Exercise_1/targets.txt", header=TRUE)
@@ -41,6 +37,7 @@ targets <- read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/
 show(targets)
 dim(expression)
 summary(expression)
+mycells <- paste0("Culture", 1:8)
 ```
 
 We can now check the type of files they are:
@@ -54,7 +51,15 @@ The data is a matrix and contains 8 different columns, which I assume they are t
 boxplot(expression, las=2)
 ```
 
-# PART 2
+Now, I create my own information:
+
+```{r}
+myInfo = list(myName= "Marta Ibáñez", myLab = "Bioinformatics Lab", myContact = "marta.ibanez@alum.esci.upf.edu", myTitle = "Practical Exercise on ExpressionSets")
+show(myInfo)
+```
+
+
+# PART 2, Bionconductor classes for omics data
 ```{r}
 require(Biobase)
 ```
@@ -68,7 +73,7 @@ show(myEset)
 
 ## Information about covariates
 ```{r}
-columnDesc <- data.frame(labelDescription = c("Sample Names", "Cells"))
+columnDesc <- data.frame(labelDescription = c("Sample Names", "Cells", "Groups"))
 myAnnotDF <- new("AnnotatedDataFrame", data = targets, varMetadata= columnDesc)
 show(myAnnotDF)
 ````
@@ -80,11 +85,20 @@ myEset <- ExpressionSet(assayData = expression, phenoData = myAnnotDF)
 show(myEset)
 ```
 
+## Storing information about the experiment
+
+```{r}
+myDesc <- new("MIAME", name= myInfo[["myName"]], lab= myInfo[["myLab"]], contact = myInfo[["myContact"]], title = myInfo[["myTitle"]])
+print(myDesc)
+```
+
+
 ## Adding information about features
 ```{r}
-myEset <- ExpressionSet(assayData = expression, phenoData = myAnnotDF)
+myEset <- ExpressionSet(assayData = expression, fetureNames = mycells, phenoData = myAnnotDF, experimentData = myDesc)
 show(myEset)
 ```
+
 ## Using objects of class ExpressionSet
 ```{r}
 dim(exprs(myEset))
