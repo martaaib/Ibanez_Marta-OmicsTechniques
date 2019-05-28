@@ -1,0 +1,103 @@
+---
+title: "MA analysis"
+author: "Marta Ibáñez Lligoña"
+date: "5/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+As I haven't been able to know how to work with the idat data, this file can't be properly executed.
+
+# Looking for the data
+
+First I went to GEO and looked for the dataset that I needed to do the exercise, I downloaded the file. 
+I went through the folder and extracted all files so I didn't have anY zip files when working with it.
+
+```{r}
+require(Biobase)
+workingDir <-getwd()
+dataDir <- file.path(workingDir, "data")
+resultsDir <- file.path(workingDir, "results")
+```
+
+# Loading data
+
+## Targets
+
+```{r}
+targets <-read.csv(file=file.path(dataDir,"targets.csv"), header = TRUE, sep=";")
+targets
+```
+
+## Idat Files
+
+```{r}
+library(illuminaio)
+rawDATA1 <- readIDAT("data/GSM3456158_201325940041_R08C01_Grn.idat")
+rawDATA2 <- readIDAT("data/GSM3456157_201325940041_R07C01_Red.idat")
+rawDATA3 <- readIDAT("data/GSM3456156_201325940046_R08C01_Grn.idat")
+rawDATA4 <- readIDAT("data/GSM3456155_201325940046_R07C01_Grn.idat")
+rawDATA5 <- readIDAT("data/GSM3456154_201325940046_R06C01_Grn.idat")
+rawDATA6 <- readIDAT("data/GSM3456153_201325940046_R05C01_Grn.idat")
+rawDATA7 <- readIDAT("data/GSM3456152_201325940046_R04C01_Grn.idat")
+rawDATA8 <- readIDAT("data/GSM3456151_201325940046_R03C01_Red.idat")
+
+rawDATA <- c(rawDATA1, rawDATA2, rawDATA3, rawDATA4, rawDATA5, rawDATA6, rawDATA7, rawDATA8)
+```
+
+# Define some variables for plots
+
+```{r}
+sampleNames<- as.character(targets$FileName)
+sampleNames
+```
+
+# BOXPLOT
+```{r}
+boxplot(rawDATA, which="all",las=2, main="Intensity distribution of RAW data", 
+        cex.axis=0.6)
+```
+
+
+# HIERARCHICAL CLUSTERING
+
+```{r}
+clust.euclid.average <- hclust(dist(t(exprs(rawDATA))),method="average")
+plot(clust.euclid.average, labels=sampleNames, main="Hierarchical clustering of RawData", 
+     cex=0.7,  hang=-1)
+```
+
+# PRINCIPAL COMPONENT ANALYSIS
+
+```{r}
+plotPCA <- function ( X, labels=NULL, colors=NULL, dataDesc="", scale=FALSE, formapunts=NULL, myCex=0.8,...)
+{
+  pcX<-prcomp(t(X), scale=scale) # o prcomp(t(X))
+  loads<- round(pcX$sdev^2/sum(pcX$sdev^2)*100,1)
+  xlab<-c(paste("PC1",loads[1],"%"))
+  ylab<-c(paste("PC2",loads[2],"%"))
+  if (is.null(colors)) colors=1
+  plot(pcX$x[,1:2],xlab=xlab,ylab=ylab, col=colors, pch=formapunts, 
+       xlim=c(min(pcX$x[,1])-100000, max(pcX$x[,1])+100000),ylim=c(min(pcX$x[,2])-100000, max(pcX$x[,2])+100000))
+  text(pcX$x[,1],pcX$x[,2], labels, pos=3, cex=myCex)
+  title(paste("Plot of first 2 PCs for expressions in", dataDesc, sep=" "), cex=0.8)
+}
+
+plotPCA(exprs(rawDATA), labels=sampleNames, dataDesc="raw data", colors=sampleColor,
+        formapunts=c(rep(16,4),rep(17,4)), myCex=0.6)
+```
+
+
+## Save to file
+
+
+# DATA NORMALIZATION
+
+```{r}
+
+```
+
+
