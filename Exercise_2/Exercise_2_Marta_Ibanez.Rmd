@@ -154,4 +154,19 @@ dev.off()
 
 # Array Quality Metrics
 
+# LINEAR MODEL AND CONTRAST MATRIX
+## Linear model matrix
+```{r}
+design <- matrix(c(1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1), nrow = 11, byrow = F)
+design2 <-model.matrix(~ 0+targets$Group)
+colnames(design)<- colnames(design2)<-c("ASC", "BM_BSC")
+rownames(design) <- rownames(design2)<- targets$ShortName
+print(design); print(design2)
+```
 
+## Contrast matrix
+```{r}
+cont.matrix <- makeContrasts (
+  ASC_BMBSC = ASC-BM_BSC,
+  levels=design)
+```

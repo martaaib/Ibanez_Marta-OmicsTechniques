@@ -1,0 +1,41 @@
+---
+title: "Linear Model and Contrast Matrix"
+author: "Marta Ibáñez Lligoña"
+date: "5/29/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Description of the project
+Cellular therapy is proposed for tendinopathy treatment. Bone marrow- (BM-MSC) and adipose tissue- (ASC-) derived mesenchymal stromal cells are candidate populations for such a therapy.
+We used microarrays to evaluate the basal gene expression in human BM-MSCs and ASCs and to create list of differentially expressed genes between analyzed groups.
+
+## Loading targets
+
+```{r}
+require(Biobase)
+require (limma)
+workingDir <-getwd()
+targets <-read.csv(file=file.path(workingDir,"targets.csv"), header = TRUE, sep=";")
+
+```
+
+## Linear Model
+
+```{r}
+design <- matrix(c(1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1), nrow = 11, byrow = F)
+design2 <-model.matrix(~ 0+targets$Group)
+colnames(design)<- colnames(design2)<-c("ASC", "BM_BSC")
+rownames(design) <- rownames(design2)<- targets$ShortName
+print(design); print(design2)
+```
+
+## Contrast Matrix
+```{r}
+cont.matrix <- makeContrasts (
+  ASC_BMBSC = ASC-BM_BSC,
+  levels=design)
+```
