@@ -249,7 +249,7 @@ heatmap.2(HMdata2,
           key=TRUE,
           keysize=1.5,
           density.info="histogram",
-          ColSideColors=c(rep("red",4),rep("blue",4)),
+          ColSideColors=c(rep("red",ncol(HMdata2)),rep("blue",ncol(HMdata2))),
           tracecol=NULL,
           srtCol=30)
 

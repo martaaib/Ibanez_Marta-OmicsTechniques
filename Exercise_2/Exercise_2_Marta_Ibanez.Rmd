@@ -34,7 +34,26 @@ targets
 ## CEL Files
 
 ```{r}
-
+installifnot <- function (pkg){
+  if (!require(pkg, character.only=T)){
+    BiocManager::install(pkg)
+}else{
+  require(pkg, character.only=T)
+  }
+}
+installifnot("pd.mogene.1.0.st.v1")
+installifnot("mogene10sttranscriptcluster.db")
+installifnot("oligo")
+installifnot("limma")
+installifnot("Biobase")
+installifnot("arrayQualityMetrics")
+installifnot("genefilter")
+installifnot("multtest")
+installifnot("annotate")
+installifnot("xtable")
+installifnot("gplots")
+installifnot("scatterplot3d")
+#install.packages("gridSVG")
 CELfiles <- list.celfiles(file.path(dataDir)) #different cel files in data
 CELfiles
 rawData <- read.celfiles(file.path(dataDir,CELfiles)) #cel files in another way
@@ -169,4 +188,37 @@ print(design); print(design2)
 cont.matrix <- makeContrasts (
   ASC_BMBSC = ASC-BM_BSC,
   levels=design)
+eset<-rma(rawData)
+annotation(eset) <- "org.Mm.eg.db"
+eset_filtered <- nsFilter(eset, var.func=IQR,
+         var.cutoff=0.75, var.filter=TRUE,
+         filterByQuantile=TRUE)
+#NUMBER OF GENES OUT
+print(eset_filtered$filter.log$numLowVar)
+
+#NUMBER OF GENES IN
+print(eset_filtered$eset)
+
+treat <- targets$Group
+lev <- factor(treat, levels = unique(treat))
+design <-model.matrix(~0+lev)
+colnames(design) <- levels(lev)
+rownames(design) <- sampleNames
+print(design)
+
+#COMPARISON
+cont.matrix1 <- makeContrasts( 
+        ASC_BMBSC = ASC-BM_BSC,
+        levels = design)
+comparison1 <- "Effect of Induction"
+
+#MODEL FIT
+fit1 <- lmFit(eset_filtered$eset, design)
+fit.main1 <- contrasts.fit(fit1, cont.matrix)
+fit.main1 <- eBayes(fit.main1)
+
+
+
+
+
 ```
