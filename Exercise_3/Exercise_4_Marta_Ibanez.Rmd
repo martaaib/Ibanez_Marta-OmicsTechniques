@@ -1,0 +1,389 @@
+---
+title: "Microarray Analysis"
+author: "Marta Ibáñez Lligoña"
+date: "6/6/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# ABSTRACT
+The dataset chosen for this project is: GSE128949, its title is “Gene Expression data from human mesenchymal stromal cells”, in Homo Sapiens. 
+The experiment type for this dataset is Expression profiling by array. Basically, the study compares two proposed cellular therapy in Bone marrow and adipose tissue in different patients.
+
+# OBJECTIVES
+The goal of the study is to use microarrays in order to evaluate the basal gene expression in human BM-MSCs (bone marrow) and ASCs (adipose tissue), and to create a list of differentially expressed genes between the analyzed groups.
+
+# MATERIALS AND METHODS 
+As I’ve said before, the experiment type is “Expression profiling by array”. Microarrays were used for this experiment.
+The overall design for this dataset was using the microarray expression analysis performed on RNA isolated from hASC (n=5) and hBM-MSC cells (n=6) using the Affymetrix Gene Atlas system.
+For this dataset, I performed an analysis on it. I used the samples, the expression matrix and the CEL files.
+
+
+
+# 1. Data capture from images or text files
+
+The dataset that I have chosen has the following id: GSE128949. 
+The title of my set is: "Gene Expression data from human mesenchymal stromal cells" in the organism Homo Sapiens. 
+
+## Sumary:
+Cellular therapy is proposed for tendinopathy treatment. Bone marrow- (BM-MSC) and adipose tissue- (ASC-) derived mesenchymal stromal cells are candidate populations for such a therapy.
+We used microarrays to evaluate the basal gene expression in human BM-MSCs and ASCs and to create list of differentially expressed genes between analyzed groups.
+
+## Experiment type
+Expression profiling by array
+
+## Overall design
+The microarray expression analysis was performed on RNA isolated from hASC (n=5) and hBM-MSC cells (n=6) using the Affymetrix Gene Atlas system.
+
+## Citation
+The citation is missing.
+
+## Data description
+You can find the target file, also an expression matrix and some CEL files.
+
+```{r}
+expression <- as.matrix(read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/Ibanez_Marta-OmicsTechniques/Exercise_4/Data/expression.txt", row.names=1, comment.char="#"))
+targets <- read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/Ibanez_Marta-OmicsTechniques/Exercise_4/Data/targets.txt", header=TRUE)
+require(Biobase)
+```
+
+## Checking the types of files
+```{r}
+show(targets)
+dim(expression)
+summary(expression)
+class(targets)
+class(expression)
+mypatient <- paste0("Patient", 1:11)
+```
+The data is a matrix and contains 11 different columns, which I assume they are the different samples. Both are data frames.
+
+
+I also decided to create my own information.
+
+```{r}
+myInfo = list(myName= "Marta Ibáñez", myLab = "Bioinformatics Lab", myContact = "marta.ibanez@alum.esci.upf.edu", myTitle = "Practical Exercise on ExpressionSets")
+show(myInfo)
+```
+
+## Creating expression set
+```{r}
+myEset <- ExpressionSet(expression)
+class(myEset)
+show(myEset)
+```
+
+## Information about covariates
+```{r}
+columnDesc <- data.frame(labelDescription = c("Sample Names", "Patients", "Groups"))
+myAnnotDF <- new("AnnotatedDataFrame", data = targets, varMetadata= columnDesc)
+show(myAnnotDF)
+````
+
+```{r}
+phenoData(myEset) <- myAnnotDF
+rownames(pData(myAnnotDF)) <- pData(myAnnotDF)$SampleName
+myEset <- ExpressionSet(assayData = expression, phenoData = myAnnotDF)
+show(myEset)
+```
+
+## Storing information about the experiment
+
+```{r}
+myDesc <- new("MIAME", name= myInfo[["myName"]], lab= myInfo[["myLab"]], contact = myInfo[["myContact"]], title = myInfo[["myTitle"]])
+print(myDesc)
+```
+
+
+## Adding information about features
+```{r}
+myEset <- ExpressionSet(assayData = expression, fetureNames = mypatient, phenoData = myAnnotDF, experimentData = myDesc)
+show(myEset)
+```
+
+# 2. Quality assesment of raw data
+
+I used the targets file and some Bioconductor functions to read the CEL files, which is the raw data.
+
+```{r}
+workingDir <-getwd()
+dataDir <- file.path(workingDir, "Data")
+resultsDir <- file.path(workingDir, "Results")
+```
+
+## Loading data
+
+## Targets
+
+```{r}
+targets <-read.csv(file=file.path(dataDir,"targets.csv"), header = TRUE, sep=";")
+targets
+```
+
+## Reading CEL files
+```{r}
+installifnot <- function (pkg){
+  if (!require(pkg, character.only=T)){
+    BiocManager::install(pkg)
+}else{
+  require(pkg, character.only=T)
+  }
+}
+installifnot("oligo")
+installifnot("limma")
+installifnot("Biobase")
+installifnot("arrayQualityMetrics")
+installifnot("genefilter")
+installifnot("multtest")
+installifnot("annotate")
+installifnot("xtable")
+installifnot("gplots")
+installifnot("scatterplot3d")
+#install.packages("gridSVG")
+CELfiles <- list.celfiles(file.path(dataDir)) #different cel files in data
+CELfiles
+rawData <- read.celfiles(file.path(dataDir,CELfiles)) #cel files in another way
+```
+
+## Define some variables for plots
+```{r}
+sampleNames<- as.character(targets$ShortName)
+sampleNames
+sampleColor <- as.character(targets$Color)
+sampleColor
+```
+
+## Quality control of raw data
+For this assessment, I wanted to see the intensity distribution of raw data, which I did with a boxplot because it is easier to see the intensity behavior between arrays. Then, I plotted the hierarchical clustering to see if the data had a pattern. And finally made a principal component analysis.
+
+### Boxplot
+```{r}
+boxplot(rawData, which="all",las=2, main="Intensity distribution of RAW data", 
+        cex.axis=0.6, names = sampleNames, col=sampleColor)
+```
+
+With this boxplot you can clearly see that the data is not normalized and it needs to be done in order to reduce bias.
+
+### Hierarchical clustering
+```{r}
+clust.euclid.average <- hclust(dist(t(exprs(rawData))),method="average")
+plot(clust.euclid.average, labels=sampleNames, main="Hierarchical clustering of RawData", 
+     cex=0.7,  hang=-1)
+```
+
+You can clearly distinguish two different big clades, one in which it is mainly ghe BM-MSC samples and the other which mainly contains the ASC pacients samples.
+
+### Principal Component Analysis
+```{r}
+plotPCA <- function ( X, labels=NULL, colors=NULL, dataDesc="", scale=FALSE, formapunts=NULL, myCex=0.8,...)
+{
+  pcX<-prcomp(t(X), scale=scale) # o prcomp(t(X))
+  loads<- round(pcX$sdev^2/sum(pcX$sdev^2)*100,1)
+  xlab<-c(paste("PC1",loads[1],"%"))
+  ylab<-c(paste("PC2",loads[2],"%"))
+  if (is.null(colors)) colors=1
+  plot(pcX$x[,1:2],xlab=xlab,ylab=ylab, col=colors, pch=formapunts, 
+       xlim=c(min(pcX$x[,1])-100000, max(pcX$x[,1])+100000),ylim=c(min(pcX$x[,2])-100000, max(pcX$x[,2])+100000))
+  text(pcX$x[,1],pcX$x[,2], labels, pos=3, cex=myCex)
+  title(paste("Plot of first 2 PCs for expressions in", dataDesc, sep=" "), cex=0.8)
+}
+plotPCA(exprs(rawData), labels=sampleNames, dataDesc="raw data", colors=sampleColor,
+        formapunts=c(rep(16,4),rep(17,4)), myCex=0.6)
+```
+
+### Save to file
+```{r}
+pdf(file.path(resultsDir, "QCPlots_Raw.pdf"))
+boxplot(rawData, which="all",las=2, main="Intensity distribution of RAW data", 
+        cex.axis=0.6, col=sampleColor, names=sampleNames)
+plot(clust.euclid.average, labels=sampleNames, main="Hierarchical clustering of samples of RawData", 
+     cex=0.7,  hang=-1)
+plotPCA(exprs(rawData), labels=sampleNames, dataDesc="raw data", colors=sampleColor,
+        formapunts=c(rep(16,4),rep(17,4)), myCex=0.6)
+dev.off()
+```
+
+# 3. Normalization
+This is done in order to reduce bias, biological variation is minimized so that differences in gene expression can be properly detected. This is done with the raw data. 
+
+```{r}
+eset<-rma(rawData)
+
+write.exprs(eset, file.path(resultsDir, "NormData.txt"))
+```
+
+# 4. Quality assesment of normalized data
+I conducted the same steps as in step number 2, and I could see the difference in the plots. For example, the boxplot was unequal without normalization, and after it, all boxes were at the same level.
+
+## Boxplot
+```{r}
+boxplot(eset, las=2, main="Intensity distribution of Normalized data", cex.axis=0.6, 
+        col=sampleColor, names=sampleNames)
+```
+
+It's different from the non-normalized boxplot, so it can be seen that the normalization can be done.
+
+## Hierarchical clustering
+```{r}
+clust.euclid.average <- hclust(dist(t(exprs(eset))),method="average")
+plot(clust.euclid.average, labels=sampleNames, main="Hierarchical clustering of NormData", 
+     cex=0.7,  hang=-1)
+```
+
+The clades have changed.
+
+## Principal Component Analysis
+```{r}
+plotPCA <- function ( X, labels=NULL, colors=NULL, dataDesc="", scale=FALSE, formapunts=NULL, myCex=0.8,...)
+{
+  pcX<-prcomp(t(X), scale=scale) # o prcomp(t(X))
+  loads<- round(pcX$sdev^2/sum(pcX$sdev^2)*100,1)
+  xlab<-c(paste("PC1",loads[1],"%"))
+  ylab<-c(paste("PC2",loads[2],"%"))
+  if (is.null(colors)) colors=1
+  plot(pcX$x[,1:2],xlab=xlab,ylab=ylab, col=colors, pch=formapunts, 
+       xlim=c(min(pcX$x[,1])-10, max(pcX$x[,1])+10),ylim=c(min(pcX$x[,2])-10, max(pcX$x[,2])+10))
+  text(pcX$x[,1],pcX$x[,2], labels, pos=3, cex=myCex)
+  title(paste("Plot of first 2 PCs for expressions in", dataDesc, sep=" "), cex=0.8)
+}
+plotPCA(exprs(eset), labels=sampleNames, dataDesc="NormData", colors=sampleColor,
+        formapunts=c(rep(16,4),rep(17,4)), myCex=0.6)
+```
+
+A change between this and the not normalized data can be seen. 
+
+## Save to file
+```{r}
+pdf(file.path(resultsDir, "QCPlots_Norm.pdf"))
+boxplot(eset, las=2, main="Intensity distribution of Normalized data", cex.axis=0.6, 
+        col=sampleColor, names=sampleNames)
+plot(clust.euclid.average, labels=sampleNames, main="Hierarchical clustering of NormData", 
+     cex=0.7,  hang=-1)
+plotPCA(exprs(eset), labels=sampleNames, dataDesc="selected samples", colors=sampleColor,
+        formapunts=c(rep(16,4),rep(17,4)), myCex=0.6)
+dev.off()
+```
+
+# 5. Filtering data
+Filtering the data needs to be done in order to exclude bad spots or adjust intensities to have better values. I annotated the expression set and filtered it, this way I could take some genes out and maybe some in too. 
+
+```{r}
+
+annotation(eset) <- "org.Hs.eg.db"
+eset_filtered <- nsFilter(eset, var.func=IQR,
+         var.cutoff=0.75, var.filter=TRUE,
+         filterByQuantile=TRUE)
+#NUMBER OF GENES OUT
+print(eset_filtered$filter.log$numLowVar)
+
+#NUMBER OF GENES IN
+print(eset_filtered$eset)
+```
+
+# 6. Identification of differentially expressed genes
+By some tests I had used with the linear model, I tried to filter the results by false discovery rate and fold change. And then I did a Volcano plot to see the differentially expressed genes. In which I could see, that the higher these were, higher the significance of these genes were, as well as the more open it was. To know more about the comparison, go to the multiple comparisons step. 
+
+## Linear models
+### Contrast Matrix Linear Model
+```{r}
+design <-model.matrix(~ 0+targets$Group)
+colnames(design)<-c("ASC", "BM_BSC")
+rownames(design)<- targets$ShortName
+print(design); 
+```
+
+### Comparison
+```{r}
+cont.matrix <- makeContrasts (
+  ASC_BMBSC = ASC-BM_BSC,
+  levels=design)
+comparison1 <- "Effect of cells"
+```
+
+### Fit linear model
+```{r}
+fit1 <- lmFit(eset_filtered$eset, design) # Fits a linear model, solving the equations to obtain the estimates. Estimates parameters using least sqaures
+fit.main1 <- contrasts.fit(fit1, cont.matrix)
+fit.main1 <- eBayes(fit.main1)
+fit.main1
+```
+
+## Differential Expressed Genes toptables
+### Filter by false discovery rate and fold change and exported to csv and html.
+```{r}
+topTab <-  topTable(fit.main1, number=nrow(fit.main1), coef=NULL, adjust="fdr")
+write.csv2(topTab, file= file.path(resultsDir,paste("Selected.Genes.in.comparison.",
+                                                    comparison1, ".csv", sep = "")))
+print(xtable(topTab,align="lllllll"),type="html",html.table.attributes="",
+      file=paste("Selected.Genes.in.comparison.",comparison1,".html", sep=""))
+```
+
+### Volcano plot
+```{r}
+volcanoplot(fit.main1, highlight=10, names=fit.main1$ID, 
+            main = paste("Differentially expressed genes", colnames(cont.matrix), sep="\n"))
+
+
+
+pdf(file.path(resultsDir,"Volcanos.pdf"))
+volcanoplot(fit.main1, highlight = 10, names = fit.main1$ID, 
+            main = paste("Differentially expressed genes", colnames(cont.matrix), sep = "\n"))
+
+```
+
+
+# 7. Annotation
+As I had done the identification, I had to annotate the dataset on order to transform these numbers to the genes. And finally creating a table with all the differentiated genes. And from here I could see that there were differential genes as the p-value < 0.15.
+
+```{r}
+all_anota<-data.frame(exprs(eset))
+library(hugene21sttranscriptcluster.db)
+Annot <- data.frame(SYMBOL=sapply(contents(hugene21sttranscriptclusterSYMBOL), paste, collapse=", "),
+                    DESC=sapply(contents(hugene21sttranscriptclusterGENENAME), paste, collapse=", "))
+Annot<-Annot[!Annot$SYMBOL=="NA",]
+Annot<-Annot[!Annot$DESC=="NA",]
+head(Annot)
+
+anotaGenes <- merge(Annot,all_anota, by.x=0,by.y=0)
+head(anotaGenes)
+write.table(anotaGenes, file ="data.ann.txt",sep="\t")
+
+rownames(anotaGenes) <- anotaGenes[,1]
+anotaGenes <- anotaGenes[,-1]
+anotaGenes.end <- merge(anotaGenes, topTab, by.x=0,by.y=0)
+
+# topTab.end = anotaGenes.end
+topTab.end <- anotaGenes.end[order(-anotaGenes.end$B),]
+
+rownames(topTab.end) <- topTab.end[,1]
+topTab.end <- topTab.end[, -1]
+write.csv(topTab.end, file = file.path(resultsDir,"TopTable.end.csv"))
+```
+
+# 8. Multiple Comparisons
+
+As I just had two groups, I only had one comparison, which you can find when identifying the differential genes. For the comparison, what we did is the contrast matrix, fitting the linear model with the expression set and finally fitting what we have done, which got me different coefficients and standard errors.
+
+# 9. Functional Interpretation
+
+With functional interpretation I can say that I have found the differentialy expressed genes as their p-value is lower than 0.15. Which would mean that there are differences between the adipose and the bone marrow cells for the therapy. 
+
+# RESULTS
+From the results of this study, I’m able to say that there are differentially expressed genes between both groups, as in the final table with the genes, I get a large group of genes with the p-value <0.15, which would mean that these are differentially expressed genes between ASC (adipose tissue) and BM-MSC (Bone marrow) stromal cells candidate populations for the proposed therapy. 
+
+# DISCUSSION
+I strongly believe that this study has some limitations, for example, when making the groups, some more factors could have been added like the level of tendinopathy (strong or low) and maybe the sex of the patient or adding age gaps.
+I also think that with microarrays, we are relying on existing knowledge about the genome sequence, and that can be a limitation too in some cases.
+Another limitation that I can find is that, if you look at the samples, you can see that there are more samples of the hBM-MSC cells, so maybe it would have been better to use the same number of samples for each group.
+
+# CONCLUSIONS
+Regarding the work I have done, I would say that I have had some complications with the annotation of the expression set, as the platform didn’t seem to be working once, I was filtering the data. But at the end, I have been able to do it and find the differentially expressed genes.  This differentially expressed genes p-values seem okay. 
+
+
+
+
+
+
