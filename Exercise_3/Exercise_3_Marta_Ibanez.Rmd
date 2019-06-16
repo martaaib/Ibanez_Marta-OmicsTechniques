@@ -9,19 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# ABSTRACT
-The dataset chosen for this project is: GSE128949, its title is “Gene Expression data from human mesenchymal stromal cells”, in Homo Sapiens. 
-The experiment type for this dataset is Expression profiling by array. Basically, the study compares two proposed cellular therapy in Bone marrow and adipose tissue in different patients.
-
-# OBJECTIVES
-The goal of the study is to use microarrays in order to evaluate the basal gene expression in human BM-MSCs (bone marrow) and ASCs (adipose tissue), and to create a list of differentially expressed genes between the analyzed groups.
-
-# MATERIALS AND METHODS 
-As I’ve said before, the experiment type is “Expression profiling by array”. Microarrays were used for this experiment.
-The overall design for this dataset was using the microarray expression analysis performed on RNA isolated from hASC (n=5) and hBM-MSC cells (n=6) using the Affymetrix Gene Atlas system.
-For this dataset, I performed an analysis on it. I used the samples, the expression matrix and the CEL files.
-
-
 
 # 1. Data capture from images or text files
 
@@ -45,8 +32,8 @@ The citation is missing.
 You can find the target file, also an expression matrix and some CEL files.
 
 ```{r}
-expression <- as.matrix(read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/Ibanez_Marta-OmicsTechniques/Exercise_4/Data/expression.txt", row.names=1, comment.char="#"))
-targets <- read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/Ibanez_Marta-OmicsTechniques/Exercise_4/Data/targets.txt", header=TRUE)
+expression <- as.matrix(read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/Ibanez_Marta-OmicsTechniques/Exercise_3/Data/expression.txt", row.names=1, comment.char="#"))
+targets <- read.delim("~/Desktop/Universitat/2_ANY/3_TRIMESTRE/Omics Techniques/Ibanez_Marta-OmicsTechniques/Exercise_3/Data/targets.txt", header=TRUE)
 require(Biobase)
 ```
 
@@ -268,7 +255,6 @@ dev.off()
 ```
 
 # 5. Filtering data
-Filtering the data needs to be done in order to exclude bad spots or adjust intensities to have better values. I annotated the expression set and filtered it, this way I could take some genes out and maybe some in too. 
 
 ```{r}
 
@@ -284,8 +270,7 @@ print(eset_filtered$eset)
 ```
 
 # 6. Identification of differentially expressed genes
-By some tests I had used with the linear model, I tried to filter the results by false discovery rate and fold change. And then I did a Volcano plot to see the differentially expressed genes. In which I could see, that the higher these were, higher the significance of these genes were, as well as the more open it was. To know more about the comparison, go to the multiple comparisons step. 
-
+ 
 ## Linear models
 ### Contrast Matrix Linear Model
 ```{r}
@@ -336,7 +321,6 @@ volcanoplot(fit.main1, highlight = 10, names = fit.main1$ID,
 
 
 # 7. Annotation
-As I had done the identification, I had to annotate the dataset on order to transform these numbers to the genes. And finally creating a table with all the differentiated genes. And from here I could see that there were differential genes as the p-value < 0.15.
 
 ```{r}
 all_anota<-data.frame(exprs(eset))
@@ -369,21 +353,5 @@ As I just had two groups, I only had one comparison, which you can find when ide
 
 # 9. Functional Interpretation
 
-With functional interpretation I can say that I have found the differentialy expressed genes as their p-value is lower than 0.15. Which would mean that there are differences between the adipose and the bone marrow cells for the therapy. 
-
-# RESULTS
-From the results of this study, I’m able to say that there are differentially expressed genes between both groups, as in the final table with the genes, I get a large group of genes with the p-value <0.15, which would mean that these are differentially expressed genes between ASC (adipose tissue) and BM-MSC (Bone marrow) stromal cells candidate populations for the proposed therapy. 
-
-# DISCUSSION
-I strongly believe that this study has some limitations, for example, when making the groups, some more factors could have been added like the level of tendinopathy (strong or low) and maybe the sex of the patient or adding age gaps.
-I also think that with microarrays, we are relying on existing knowledge about the genome sequence, and that can be a limitation too in some cases.
-Another limitation that I can find is that, if you look at the samples, you can see that there are more samples of the hBM-MSC cells, so maybe it would have been better to use the same number of samples for each group.
-
-# CONCLUSIONS
-Regarding the work I have done, I would say that I have had some complications with the annotation of the expression set, as the platform didn’t seem to be working once, I was filtering the data. But at the end, I have been able to do it and find the differentially expressed genes.  This differentially expressed genes p-values seem okay. 
-
-
-
-
-
+With functional interpretation I can say that I have found the differentially expressed genes as their p-value is lower than 0.15. Which would mean that there are differences between the adipose and the bone marrow cells for the therapy. 
 

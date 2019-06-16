@@ -1,0 +1,101 @@
+---
+title: "Report"
+author: "Marta Ibáñez Lligoña"
+date: "6/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Link to the repository: [Repository]{https://github.com/martaaib/Ibanez_Marta-OmicsTechniques}
+
+# ABSTRACT
+
+The dataset chosen for this project is: GSE128949, its title is “Gene Expression data from human mesenchymal stromal cells”, in Homo Sapiens. The experiment type for this dataset is Expression profiling by array. Basically, the study compares two proposed cellular therapy in Bone marrow and adipose tissue in different patients, and with this analysis some differential gene expressions might be identified.
+
+# OBJECTIVES
+
+The goal of the study is to use microarrays in order to evaluate the basal gene expression in human BM-MSCs (bone marrow) and ASCs (adipose tissue), and to create a list of differentially expressed genes between the analyzed groups.
+
+# MATERIALS AND METHODS
+
+As I’ve said before, the experiment type is “Expression profiling by array”. Microarrays were used for this experiment.
+The overall design for this dataset was using the microarray expression analysis performed on RNA isolated from hASC (n=5) and hBM-MSC cells (n=6) using the Affymetrix Gene Atlas system.
+For this dataset, I performed an analysis on it. I used the samples, the expression matrix and the CEL files.
+
+For this analysis, I’ve followed the following workflow:
+
+## Data capture from images or text files
+
+From here I looked for my dataset and all the files I needed to make the appropriate workflow.
+The GEO dataset is GSE128949.
+
+## Quality assessment of raw data
+
+I wanted to see the intensity distribution of raw data, which I did with a boxplot because it is easier to see the intensity behavior between arrays. Then, I plotted the hierarchical clustering to see if the data had a pattern. And finally made a principal component analysis.
+
+For the **boxplot** (QCPlots_Raw.pdf, *figure 1*), I could see that the data was not normalized.
+
+For the **hierarchical clustering**(QCPlots_Raw.pdf, *figure 2*), I could clearly distinguish two different clades, one in which it is mainly the BM-MSC samples and the other which mainly contains the ASC pacients samples.
+
+## Normalization
+
+This is done in order to reduce bias, biological variation is minimized so that differences in gene expression can be properly detected, with the raw data. I used the function *rma()* to normalize it .
+
+## Quality assessment of normalized data
+
+I conducted the same steps as in the step of the quality assessment of raw data, and I could see the difference in the plots. 
+
+The boxplot was unequal without normalization, and after it, all boxes were at the same level, which can be seen in the file QCPlots_Norm.pdf, *figure 1*.
+
+The hierarchichal clustering had changed as well. 
+
+## Filtering data
+
+Filtering the data needs to be done in order to exclude bad spots or adjust intensities to have better values. I annotated the expression set and filtered it, this way I could take some genes out and maybe some in too.
+
+To do this I used the *org.Hs.eg.db* database, which contains genome wide annotation for human, based on the Entrez Gene Identifiers. In the case for the datase I had used, the gene annotation for it was not available, so I had to use this one.
+For it I used the *nsFilter()*. From this function, I get a number of genes out and a number of genes in.
+
+## Identification of differentially expressed genes
+
+By some tests I had used with the linear model, I tried to filter the results by false discovery rate and fold change. 
+
+And then I did a Volcano plot to see the differentially expressed genes. In which I could see, that the higher these were, higher the significance of these genes were, as well as the more open it was. 
+*The volcano plot can be found in the file Volcanos.pdf*.
+
+To do all of this I had to create a linear model, in which you can find more information in the directory *Exercise_2*, the file called *Linear_Model_Contrast_Matrix.Rmd*.
+
+## Annotation
+As I had done the identification, I had to annotate the dataset on order to transform these numbers to the genes. And finally creating a table with all the differentiated genes. And from here I could see that there were differential genes as the p-value < 0.15.
+
+The final table with the gene symbols of the selected genes that have an effect on the therapy are in the file *TopTable.end.csv*. 
+
+## Multiple comparisons
+
+As I just had two groups, I only had one comparison, which you can find when identifying the differentially expressed genes. For the comparison, what we did is the contrast matrix, fitting the linear model with the expression set and finally fitting what we have done, which got me different coefficients and standard errors.
+
+## Functional Interpretation
+
+I can say that I have found the differentially expressed genes as their p-value is lower than 0.15. Which would mean that there are differences between the adipose and the bone marrow cells for the therapy.
+
+
+# RESULTS
+
+From the results of this study, I’m able to say that there are differentially expressed genes between both groups, as in the final table with the genes, I get a large group of genes with the p-value <0.15, which would mean that these are differentially expressed genes between ASC (adipose tissue) and BM-MSC (Bone marrow) stromal cells candidate populations for the proposed therapy.
+As I have said, these genes can be found in the *TopTable.end.csv* file. 
+
+# DISCUSSION
+
+I strongly believe that this study has some limitations, for example, when making the groups, some more factors could have been added like the level of tendinopathy (strong or low) and maybe the sex of the patient or adding age gaps.
+I also think that with microarrays, we are relying on existing knowledge about the genome sequence, and that can be a limitation too in some cases.
+Another limitation that I can find is that, if you look at the samples, you can see that there are more samples of the hBM-MSC cells, so maybe it would have been better to use the same number of samples for each group.
+
+# CONCLUSIONS
+
+Regarding the work I have done, I would say that I have had some complications with the annotation of the expression set, as the platform didn’t seem to be working once, I was filtering the data. But at the end, I have been able to do it and find the differentially expressed genes.
+These differentially expressed genes p-values seem okay.
+
+
