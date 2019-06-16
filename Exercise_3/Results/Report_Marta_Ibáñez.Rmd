@@ -64,10 +64,7 @@ The boxplot was unequal without normalization, and after it, all boxes were at t
 ![Boxplot Normalized Data](/Users/marta/Desktop/Boxplot2.png)
 
 
-The hierarchichal clustering had changed as well. 
-
-![Boxplot Raw Data](/Users/marta/Desktop/HC2.png)
-
+The hierarchichal clustering had changed as well, it can be found in the file QCPlots_Norm.pdf, *figure 2*, in the *Results* folder, **Exercise_3·**.
 
 
 ## Filtering data
@@ -93,10 +90,6 @@ As I had done the identification, I had to annotate the dataset on order to tran
 
 The final table with the gene symbols of the selected genes that have an effect on the therapy are in the file *TopTable.end.csv*. 
 
-Here you can see some examples of the genes:
-
-![Differentially Expressed Genes](/Users/marta/Desktop/TopTbl.png)
-
 ## Multiple comparisons
 
 As I just had two groups, I only had one comparison, which you can find when identifying the differentially expressed genes. For the comparison, what we did is the contrast matrix, fitting the linear model with the expression set and finally fitting what we have done, which got me different coefficients and standard errors.
@@ -110,6 +103,8 @@ I can say that I have found the differentially expressed genes as their p-value 
 
 From the results of this study, I’m able to say that there are differentially expressed genes between both groups, as in the final table with the genes, I get a large group of genes with the p-value <0.15, which would mean that these are differentially expressed genes between ASC (adipose tissue) and BM-MSC (Bone marrow) stromal cells candidate populations for the proposed therapy.
 As I have said, these genes can be found in the *TopTable.end.csv* file in the repository, the results folder in the **Exercise_3** folder. 
+
+An example of a differentially expressed gene could be the VCAM1 (vascular cell adhesion molecule1) or IFI6 (interferon alpha inducible protein 6), as both have a p-value < 0.15.
 
 # DISCUSSION
 
